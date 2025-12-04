@@ -254,89 +254,7 @@
     <div class="container">
         <h1>Test de Personnalité DISC</h1>
         
-        <div class="question">
-            <h3>Question 1 : Préférez-vous travailler en équipe ou de manière indépendante ?</h3>
-            <div class="slider-container">
-                <input type="range" id="q1" min="-3" max="3" value="0" step="1">
-                <div class="slider-marks">
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                </div>
-                <div class="labels">
-                    <span>Indépendant</span>
-                    <span>Neutre</span>
-                    <span>En équipe</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="question">
-            <h3>Question 2 : Êtes-vous orienté vers les résultats ou les relations ?</h3>
-            <div class="slider-container">
-                <input type="range" id="q2" min="-3" max="3" value="0" step="1">
-                <div class="slider-marks">
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                </div>
-                <div class="labels">
-                    <span>Relations</span>
-                    <span>Neutre</span>
-                    <span>Résultats</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="question">
-            <h3>Question 3 : Les fêtes de 5 à 7 sont-elles stimulantes ou épuisantes ?</h3>
-            <div class="slider-container">
-                <input type="range" id="q3" min="-3" max="3" value="0" step="1">
-                <div class="slider-marks">
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                </div>
-                <div class="labels">
-                    <span>Épuisantes</span>
-                    <span>Neutre</span>
-                    <span>Stimulantes</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="question">
-            <h3>Question 4 : Lorsque vous faites un travail pour une personne, êtes-vous plus fier du travail accompli ou de la réaction de la personne ?</h3>
-            <div class="slider-container">
-                <input type="range" id="q4" min="-3" max="3" value="0" step="1">
-                <div class="slider-marks">
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                    <div class="mark"></div>
-                </div>
-                <div class="labels">
-                    <span>Réaction de la personne</span>
-                    <span>Neutre</span>
-                    <span>Travail accompli</span>
-                </div>
-            </div>
-        </div>
+        <div id="questions-container"></div>
 
         <div class="results">
             <h2>Résultats</h2>
@@ -375,10 +293,9 @@
     </div>
 
     <script>
-        const q1 = document.getElementById('q1');
-        const q2 = document.getElementById('q2');
-        const q3 = document.getElementById('q3');
-        const q4 = document.getElementById('q4');
+        let questionsData = [];
+        let sliders = {};
+
         const outgoingScore = document.getElementById('outgoing-score');
         const taskScore = document.getElementById('task-score');
         const outgoingLabel = document.getElementById('outgoing-label');
@@ -410,18 +327,114 @@
             }
         };
 
+        const questionsJSON = {
+            "questions": [
+                {
+                    "id": "q1",
+                    "text": "Préférez-vous travailler en équipe ou de manière indépendante ?",
+                    "leftLabel": "Indépendant",
+                    "centerLabel": "Neutre",
+                    "rightLabel": "En équipe",
+                    "impacts": {
+                        "outgoing": 1,
+                        "taskOriented": 0
+                    }
+                },
+                {
+                    "id": "q2",
+                    "text": "Êtes-vous orienté vers les résultats ou les relations ?",
+                    "leftLabel": "Relations",
+                    "centerLabel": "Neutre",
+                    "rightLabel": "Résultats",
+                    "impacts": {
+                        "outgoing": 0,
+                        "taskOriented": 1
+                    }
+                },
+                {
+                    "id": "q3",
+                    "text": "Les fêtes de 5 à 7 sont-elles stimulantes ou épuisantes ?",
+                    "leftLabel": "Épuisantes",
+                    "centerLabel": "Neutre",
+                    "rightLabel": "Stimulantes",
+                    "impacts": {
+                        "outgoing": 1,
+                        "taskOriented": 0
+                    }
+                },
+                {
+                    "id": "q4",
+                    "text": "Lorsque vous faites un travail pour une personne, êtes-vous plus fier du travail accompli ou de la réaction de la personne ?",
+                    "leftLabel": "Réaction de la personne",
+                    "centerLabel": "Neutre",
+                    "rightLabel": "Travail accompli",
+                    "impacts": {
+                        "outgoing": 0,
+                        "taskOriented": 1
+                    }
+                }
+            ]
+        };
+
+        function loadQuestions() {
+            questionsData = questionsJSON.questions;
+            renderQuestions();
+            setupEventListeners();
+            calculateScores();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            questionsData.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <h3>Question ${index + 1} : ${question.text}</h3>
+                    <div class="slider-container">
+                        <input type="range" id="${question.id}" min="-3" max="3" value="0" step="1">
+                        <div class="slider-marks">
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                            <div class="mark"></div>
+                        </div>
+                        <div class="labels">
+                            <span>${question.leftLabel}</span>
+                            <span>${question.centerLabel}</span>
+                            <span>${question.rightLabel}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+                sliders[question.id] = document.getElementById(question.id);
+            });
+        }
+
+        function setupEventListeners() {
+            questionsData.forEach(question => {
+                sliders[question.id].addEventListener('input', calculateScores);
+            });
+        }
+
         function calculateScores() {
-            const v1 = parseInt(q1.value);
-            const v2 = parseInt(q2.value);
-            const v3 = parseInt(q3.value);
-            const v4 = parseInt(q4.value);
-            
-            // Calcul des scores combinés
-            // Outgoing : Q1 (équipe vs indépendant) + Q3 (fêtes stimulantes)
-            const outgoing = v1 + v3;
-            // Task-oriented : Q2 (résultats vs relations) + Q4 (travail vs réaction)
-            const taskOriented = v2 + v4;
-            
+            let outgoing = 0;
+            let taskOriented = 0;
+
+            questionsData.forEach(question => {
+                const value = parseInt(sliders[question.id].value);
+                outgoing += value * question.impacts.outgoing;
+                taskOriented += value * question.impacts.taskOriented;
+            });
+
+            updateResults(outgoing, taskOriented);
+        }
+
+        function updateResults(outgoing, taskOriented) {
             // Affichage Outgoing/Réservé
             if (outgoing >= 0) {
                 outgoingLabel.textContent = 'Extraverti :';
@@ -441,10 +454,8 @@
             }
             
             // Mettre à jour la position du point sur le graphique
-            // outgoing: -6 à +6, taskOriented: -6 à +6
-            // Convertir en pourcentage (0% à 100%)
             const xPercent = ((outgoing + 6) / 12) * 100;
-            const yPercent = ((6 - taskOriented) / 12) * 100; // Inverser Y car top=0 en CSS
+            const yPercent = ((6 - taskOriented) / 12) * 100;
             
             positionPoint.style.left = xPercent + '%';
             positionPoint.style.top = yPercent + '%';
@@ -452,18 +463,17 @@
             // Déterminer le type de personnalité DISC
             let type;
             if (outgoing > 0 && taskOriented > 0) {
-                type = 'D'; // Extraverti + Orienté tâche = Dominance
+                type = 'D';
             } else if (outgoing > 0 && taskOriented < 0) {
-                type = 'I'; // Extraverti + Orienté relations = Influence
+                type = 'I';
             } else if (outgoing < 0 && taskOriented < 0) {
-                type = 'S'; // Réservé + Orienté relations = Stabilité
+                type = 'S';
             } else if (outgoing < 0 && taskOriented > 0) {
-                type = 'C'; // Réservé + Orienté tâche = Conformité
+                type = 'C';
             } else {
-                type = null; // Position neutre
+                type = null;
             }
             
-            // Réinitialiser les styles inline
             typeBadge.style.background = '';
             typeBadge.style.color = '';
             
@@ -481,13 +491,8 @@
             }
         }
 
-        q1.addEventListener('input', calculateScores);
-        q2.addEventListener('input', calculateScores);
-        q3.addEventListener('input', calculateScores);
-        q4.addEventListener('input', calculateScores);
-
-        // Initialisation
-        calculateScores();
+        // Charger les questions au démarrage
+        loadQuestions();
     </script>
 </body>
 </html>
